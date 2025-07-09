@@ -1,11 +1,40 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, use } from "react";
 import { Link, NavLink } from "react-router";
+import { AuthContext } from "../providers/authContext";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // Get auth context
+  const { currentUser, logout } = use(AuthContext);
+  const isLoggedIn = !!currentUser;
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logged out successfully!");
+    } catch (error) {
+      console.error("Logout error:", error);
+      toast.error("Failed to logout. Please try again.");
+    }
+  };
+
+  // Get user display name and first letter for avatar
+  const getUserDisplayName = () => {
+    if (!currentUser) return "";
+    return (
+      currentUser.displayName || currentUser.email?.split("@")[0] || "User"
+    );
+  };
+
+  const getUserInitial = () => {
+    const displayName = getUserDisplayName();
+    return displayName.charAt(0).toUpperCase();
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -23,9 +52,9 @@ const Navbar = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -33,29 +62,29 @@ const Navbar = () => {
   const navLinkClass = ({ isActive }) =>
     `px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
       isActive
-        ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-600'
-        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+        ? "bg-blue-100 text-blue-700 border-b-2 border-blue-600"
+        : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
     }`;
 
   const dropdownLinkClass = ({ isActive }) =>
     `flex items-center px-4 py-2 transition-colors duration-200 ${
       isActive
-        ? 'bg-blue-100 text-blue-700 border-r-4 border-blue-600'
-        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+        ? "bg-blue-100 text-blue-700 border-r-4 border-blue-600"
+        : "text-gray-700 hover:bg-blue-50 hover:text-blue-600"
     }`;
 
   const mobileLinkClass = ({ isActive }) =>
     `block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
       isActive
-        ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600'
-        : 'text-gray-700 hover:text-blue-600 hover:bg-white'
+        ? "bg-blue-100 text-blue-700 border-l-4 border-blue-600"
+        : "text-gray-700 hover:text-blue-600 hover:bg-white"
     }`;
 
   const mobileDropdownLinkClass = ({ isActive }) =>
     `block px-6 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
       isActive
-        ? 'bg-blue-100 text-blue-700 border-l-4 border-blue-600'
-        : 'text-gray-700 hover:text-blue-600 hover:bg-white'
+        ? "bg-blue-100 text-blue-700 border-l-4 border-blue-600"
+        : "text-gray-700 hover:text-blue-600 hover:bg-white"
     }`;
 
   return (
@@ -64,46 +93,44 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Website Name */}
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-lg mr-3 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">V</span>
+            <Link to={"/"}>
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-lg mr-3 flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">V</span>
+                  </div>
+                </div>
+                <div className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-700 bg-clip-text text-transparent">
+                  VIBEHIVE
                 </div>
               </div>
-              <div className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-700 bg-clip-text text-transparent">VIBEHIBE</div>
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
-                <NavLink 
-                  to="/"
-                  className={navLinkClass}
-                >
+                <NavLink to="/" className={navLinkClass}>
                   Home
                 </NavLink>
-                <NavLink
-                  to="/membership"
-                  className={navLinkClass}
-                >
+                <NavLink to="/membership" className={navLinkClass}>
                   Membership
                 </NavLink>
-                
+
                 {/* User Dashboard Dropdown */}
                 {isLoggedIn && (
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={toggleDropdown}
                       className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
-                        isDropdownOpen 
-                          ? 'bg-blue-100 text-blue-700' 
-                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                        isDropdownOpen
+                          ? "bg-blue-100 text-blue-700"
+                          : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
                       }`}
                     >
                       User Dashboard
                       <svg
                         className={`ml-1 h-4 w-4 transition-transform duration-200 ${
-                          isDropdownOpen ? 'rotate-180' : ''
+                          isDropdownOpen ? "rotate-180" : ""
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -126,8 +153,18 @@ const Navbar = () => {
                           className={dropdownLinkClass}
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          <svg
+                            className="w-4 h-4 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
                           </svg>
                           My Profile
                         </NavLink>
@@ -136,8 +173,18 @@ const Navbar = () => {
                           className={dropdownLinkClass}
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          <svg
+                            className="w-4 h-4 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                            />
                           </svg>
                           Add Post
                         </NavLink>
@@ -146,8 +193,18 @@ const Navbar = () => {
                           className={dropdownLinkClass}
                           onClick={() => setIsDropdownOpen(false)}
                         >
-                          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          <svg
+                            className="w-4 h-4 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                           </svg>
                           My Posts
                         </NavLink>
@@ -181,26 +238,35 @@ const Navbar = () => {
 
               {/* Join Us Button (when not logged in) or User Info (when logged in) */}
               {!isLoggedIn ? (
-                <Link to={"/register"}><button
-                  className="bg-[#3B82DE] hover:bg-slate-900 cursor-pointer text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
-                >
-                  Join Us
-                </button></Link>
+                <Link to={"/register"}>
+                  <button className="bg-[#3B82DE] hover:bg-slate-900 cursor-pointer text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md">
+                    Join Us
+                  </button>
+                </Link>
               ) : (
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">
-                        {/* First letter of username */}
-                        S
-                      </span>
-                    </div>
-                    <span className="text-gray-700 font-medium">sabbir-islam</span>
+                    {currentUser.photoURL ? (
+                      <img
+                        src={currentUser.photoURL}
+                        alt="User Avatar"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-blue-500"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">
+                          {getUserInitial()}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-gray-700 font-medium">
+                      {getUserDisplayName()}
+                    </span>
                     {/* Online status indicator */}
                     <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
                   </div>
                   <button
-                    onClick={() => setIsLoggedIn(false)}
+                    onClick={handleLogout}
                     className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
                   >
                     Logout
@@ -319,23 +385,34 @@ const Navbar = () => {
                   </button>
 
                   {!isLoggedIn ? (
-                    <button 
-                      onClick={() => setIsLoggedIn(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
-                    >
-                      Join Us
-                    </button>
+                    <Link to={"/register"}>
+                      <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md">
+                        Join Us
+                      </button>
+                    </Link>
                   ) : (
                     <div className="flex flex-col items-end space-y-2">
                       <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold text-xs">S</span>
-                        </div>
-                        <span className="text-sm text-gray-600">sabbir-islam</span>
+                        {currentUser.photoURL ? (
+                          <img
+                            src={currentUser.photoURL}
+                            alt="User Avatar"
+                            className="w-6 h-6 rounded-full object-cover border border-blue-500"
+                          />
+                        ) : (
+                          <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-semibold text-xs">
+                              {getUserInitial()}
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-sm text-gray-600">
+                          {getUserDisplayName()}
+                        </span>
                         <div className="w-2 h-2 bg-green-500 rounded-full border border-white shadow-sm"></div>
                       </div>
-                      <button 
-                        onClick={() => setIsLoggedIn(false)}
+                      <button
+                        onClick={handleLogout}
                         className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded text-sm font-medium transition-colors duration-200"
                       >
                         Logout

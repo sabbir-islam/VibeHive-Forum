@@ -38,7 +38,7 @@ const Banner = () => {
               />
               <button
                 onClick={handleSearch}
-                className="px-6 py-3 bg-red-500 hover:bg-[#082B48] text-white font-medium text-lg rounded-r-md transition-colors duration-200 cursor-pointer"
+                className="px-6 py-3 bg-[#3B82DE] hover:bg-[#3b56debc] text-white font-medium text-lg rounded-r-md transition-colors duration-200 cursor-pointer"
               >
                 Search
               </button>
@@ -47,7 +47,7 @@ const Banner = () => {
 
           {/* Right Content */}
           <div className="mt-10 md:mt-0 md:w-1/3">
-           <div className="bg-gray-50 bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-lg p-6 text-cyan-950 shadow-lg border border-white border-opacity-20">
+           <div className="bg-slate-800 bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-lg p-6 text-[#3B82DE] shadow-lg border border-slate-800 border-opacity-20">
             <ul className="space-y-4">
                 <li className="flex justify-between items-center">
                     <span className="font-medium">Registered Users</span>
