@@ -12,7 +12,7 @@ const Root = () => {
       <div className="mx-auto">
         <Outlet />
       </div>
-      <div className="mx-auto mt-56">
+      <div className="mx-auto">
         <Footer />
       </div>
     </div>

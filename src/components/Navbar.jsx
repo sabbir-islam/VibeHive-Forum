@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { NavLink } from "react-router";
+import { Link, NavLink } from "react-router";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -70,7 +70,7 @@ const Navbar = () => {
                   <span className="text-white font-bold text-lg">V</span>
                 </div>
               </div>
-              <div className="text-xl font-bold text-gray-800">VIBEHIBE</div>
+              <div className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-700 bg-clip-text text-transparent">VIBEHIBE</div>
             </div>
 
             {/* Desktop Navigation */}
@@ -181,12 +181,11 @@ const Navbar = () => {
 
               {/* Join Us Button (when not logged in) or User Info (when logged in) */}
               {!isLoggedIn ? (
-                <button
-                  onClick={() => setIsLoggedIn(true)}
-                  className="bg-red-500 hover:bg-slate-900 cursor-pointer text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
+                <Link to={"/register"}><button
+                  className="bg-[#3B82DE] hover:bg-slate-900 cursor-pointer text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
                 >
                   Join Us
-                </button>
+                </button></Link>
               ) : (
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-2">
