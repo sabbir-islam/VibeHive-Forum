@@ -6,10 +6,10 @@ import Footer from "../components/Footer";
 const Root = () => {
   return (
     <div>
-      <div className="md:w-[80%] mx-auto">
+      <div className=" mx-auto">
         <Navbar />
       </div>
-      <div className="md:w-[80%] mx-auto">
+      <div className="mx-auto">
         <Outlet />
       </div>
       <div className="md:w-[80%] mx-auto">

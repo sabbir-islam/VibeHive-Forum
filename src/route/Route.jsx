@@ -3,7 +3,7 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router";
-import Home from '../pages/Home';
+import Home from '../pages/Home/Home';
 import Root from '../pages/Root';
 import NotFound from '../pages/NotFound';
 
