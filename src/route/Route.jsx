@@ -8,6 +8,7 @@ import Login from "../pages/Login";
 import UserProfile from "../pages/UserProfile";
 import PrivateRoute from "../providers/PrivateRoute";
 import AddPost from "../pages/AddPost";
+import LoadingPage from "../pages/LoadingPage";
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,7 @@ const router = createBrowserRouter([
       {
         index: true,
         Component: Home,
+        hydrateFallbackElement: <LoadingPage></LoadingPage>
       },
       {
         path: "/register",
@@ -29,12 +31,17 @@ const router = createBrowserRouter([
       {
         path: "/profile/:email",
         element: <PrivateRoute><UserProfile></UserProfile></PrivateRoute>,
-        loader:({params})=>fetch(`https://vibe-hive-omega.vercel.app/users/${params.email}`)
+        loader:({params})=>fetch(`https://vibe-hive-omega.vercel.app/users/${params.email}`),
+        hydrateFallbackElement: <LoadingPage></LoadingPage>
       },
       {
         path: "/add-post",
         element: <PrivateRoute><AddPost></AddPost></PrivateRoute>
       },
+      {
+        path: "/my-post"
+      }
+      ,
       {
         path: "*",
         Component: NotFound,

@@ -1,7 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 import { AuthContext } from '../providers/authContext';
+import { toast } from 'react-toastify';
 
 
 const AddPost = () => {
@@ -9,8 +10,8 @@ const AddPost = () => {
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    authorImage: '',
-    authorName: currentUser?.name || '',
+    authorImage: currentUser?.photoURL || '',
+    authorName: currentUser?.displayName || '',
     authorEmail: currentUser?.email || '',
     title: '',
     description: '',
@@ -18,6 +19,17 @@ const AddPost = () => {
     upVote: 0,
     downVote: 0
   });
+
+  useEffect(() => {
+    if (currentUser) {
+      setFormData(prevData => ({
+        ...prevData,
+        authorImage: currentUser.photoURL || '',
+        authorName: currentUser.displayName || '',
+        authorEmail: currentUser.email || ''
+      }));
+    }
+  }, [currentUser]);
 
   const tagOptions = [
     { value: 'technology', label: 'Technology' },
@@ -62,13 +74,11 @@ const AddPost = () => {
       // and then include the URL in postData
 
       // Replace with your API endpoint
-      await axios.post('/api/posts', postData);
+      await axios.post('https://vibe-hive-omega.vercel.app/posts', postData);
+      toast.success('Post added successfully!')
       
       // Reset form after successful submission
       setFormData({
-        authorImage: '',
-        authorName: currentUser?.name || '',
-        authorEmail: currentUser?.email || '',
         title: '',
         description: '',
         tag: null,
@@ -76,17 +86,16 @@ const AddPost = () => {
         downVote: 0
       });
       
-      alert('Post added successfully!');
     } catch (error) {
       console.error('Error adding post:', error);
-      alert('Failed to add post. Please try again.');
+      toast.error('Failed to add post. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-base-200 min-h-screen py-10 px-4 sm:px-6">
+    <div className="bg-base-200 min-h-screen mb-20 py-10 px-4 sm:px-6">
       <div className="max-w-3xl mx-auto">
         <div className="card bg-base-100 shadow-xl">
           <div className="card-body">
@@ -102,7 +111,7 @@ const AddPost = () => {
                   <input 
                   type="text" 
                   name="authorImage" 
-                  value={formData.authorName} 
+                  value={formData.authorImage}
                   onChange={handleInputChange} 
                   placeholder="Enter image url" 
                   className="input input-bordered w-full" 
