@@ -149,7 +149,7 @@ const Navbar = () => {
                     {isDropdownOpen && (
                       <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                         <NavLink
-                          to="/profile"
+                          to={`/profile/${currentUser.email}`}
                           className={dropdownLinkClass}
                           onClick={() => setIsDropdownOpen(false)}
                         >
@@ -267,7 +267,7 @@ const Navbar = () => {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
+                    className="bg-gray-500 hover:bg-gray-600 cursor-pointer text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
                   >
                     Logout
                   </button>
@@ -341,7 +341,7 @@ const Navbar = () => {
                         User Dashboard
                       </div>
                       <NavLink
-                        to="/profile"
+                        to={`/profile/:${currentUser.email}`}
                         className={mobileDropdownLinkClass}
                         onClick={() => setIsMenuOpen(false)}
                       >

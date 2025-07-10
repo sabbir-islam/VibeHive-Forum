@@ -1,9 +1,10 @@
 import React, { use, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { updateProfile } from "firebase/auth";
 import { AuthContext } from "../providers/authContext";
 import { toast } from "react-toastify";
+import axios, { Axios } from "axios";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +19,7 @@ const Register = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { createUser, signInWithGoogle } = use(AuthContext);
-//   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const validatePassword = (password) => {
     const errors = [];
@@ -38,7 +39,7 @@ const Register = () => {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
-    
+
     // Clear general error as well
     if (errors.general) {
       setErrors((prev) => ({ ...prev, general: "" }));
@@ -48,7 +49,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrors({}); // Clear all errors
+    setErrors({});
 
     const newErrors = {};
 
@@ -74,38 +75,63 @@ const Register = () => {
     try {
       // Extract email and password from formData
       const { email, password, name, photoURL } = formData;
-      
+
       // Create user with Firebase
       const userCredential = await createUser(email, password);
-      
+
       // Update user profile with name and photo URL
       if (userCredential?.user) {
         await updateProfile(userCredential.user, {
           displayName: name,
           photoURL: photoURL || null,
         });
+        toast.success("Registration successful! Welcome to VibeHive!");
+        // Send user data to server
+        try {
+          const userData = {
+            name: name,
+            photo: photoURL || null,
+            email: email,
+            uid: userCredential.user.uid,
+            createdAt: new Date().toISOString(),
+          };
+
+          const response = await axios.post(
+            "https://vibe-hive-omega.vercel.app/users",
+            userData
+          );
+          console.log("User data sent to server:", response.data);
+        } catch (serverError) {
+          console.error("Error sending data to server:", serverError);
+          // Don't throw error here as user is already created
+          toast.warning(
+            "Account created but failed to sync with server. Please try logging in again."
+          );
+        }
       }
 
       console.log("Registration successful:", formData);
-      toast.success('Registration successful! Welcome to VibeHive!')
-      
-      
+
+      // Navigate to home page after successful registration
+      navigate("/");
     } catch (error) {
       console.error("Registration error:", error);
-      
+
       // Handle specific Firebase errors
       let errorMessage = "Registration failed. Please try again.";
-      
+
       if (error.code === "auth/email-already-in-use") {
-        errorMessage = "This email is already registered. Please use a different email.";
+        errorMessage =
+          "This email is already registered. Please use a different email.";
       } else if (error.code === "auth/invalid-email") {
         errorMessage = "Please enter a valid email address.";
       } else if (error.code === "auth/weak-password") {
-        errorMessage = "Password is too weak. Please choose a stronger password.";
+        errorMessage =
+          "Password is too weak. Please choose a stronger password.";
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
@@ -117,16 +143,42 @@ const Register = () => {
       setLoading(true);
       const result = await signInWithGoogle();
       console.log("Google sign-in successful:", result);
-      
-      // Optional: Navigate after successful Google sign-in
-      // navigate("/dashboard");
-      
-      alert("Google sign-in successful!");
+
+      // Send user data to server for Google sign-in
+      if (result?.user) {
+        try {
+          const userData = {
+            name: result.user.displayName || "Google User",
+            photo: result.user.photoURL || null,
+            email: result.user.email,
+            uid: result.user.uid,
+            createdAt: new Date().toISOString(),
+            provider: "google",
+          };
+
+          const response = await axios.post(
+            "https://vibe-hive-omega.vercel.app/users",
+            userData
+          );
+          console.log("Google user data sent to server:", response.data);
+        } catch (serverError) {
+          console.error(
+            "Error sending Google user data to server:",
+            serverError
+          );
+          toast.warning(
+            "Signed in successfully but failed to sync with server."
+          );
+        }
+      }
+
+      toast.success("Google sign-in successful!");
+      navigate("/");
     } catch (error) {
       console.error("Google sign-in error:", error);
-      
+
       let errorMessage = "Google sign-in failed. Please try again.";
-      
+
       if (error.code === "auth/popup-closed-by-user") {
         errorMessage = "Sign-in cancelled. Please try again.";
       } else if (error.code === "auth/popup-blocked") {
@@ -134,8 +186,9 @@ const Register = () => {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setErrors({ general: errorMessage });
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
