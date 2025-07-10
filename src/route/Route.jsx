@@ -9,6 +9,7 @@ import UserProfile from "../pages/UserProfile";
 import PrivateRoute from "../providers/PrivateRoute";
 import AddPost from "../pages/AddPost";
 import LoadingPage from "../pages/LoadingPage";
+import MyPosts from "../pages/MyPosts";
 
 const router = createBrowserRouter([
   {
@@ -39,7 +40,9 @@ const router = createBrowserRouter([
         element: <PrivateRoute><AddPost></AddPost></PrivateRoute>
       },
       {
-        path: "/my-post"
+        path: "/my-posts",
+        element: <PrivateRoute><MyPosts></MyPosts></PrivateRoute>,
+        hydrateFallbackElement: <LoadingPage></LoadingPage>
       }
       ,
       {
