@@ -6,6 +6,10 @@ const ForumPosts = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState({});
+  const [postComments, setPostComments] = useState({});
+  const [showComments, setShowComments] = useState({});
+  const [loadingComments, setLoadingComments] = useState({});
+  const [commentCounts, setCommentCounts] = useState({});
   const { currentUser } = useAuth();
 
   // Fetch posts from API
@@ -17,6 +21,12 @@ const ForumPosts = () => {
         );
         const data = await response.json();
         setPosts(data);
+
+        // Fetch comment counts for all posts
+        data.forEach((post) => {
+          fetchCommentCount(post._id);
+        });
+
         setLoading(false);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -26,6 +36,57 @@ const ForumPosts = () => {
 
     fetchPosts();
   }, []);
+
+  // Fetch comment count for a specific post
+  const fetchCommentCount = async (postId) => {
+    try {
+      const response = await fetch(
+        `https://vibe-hive-omega.vercel.app/posts/${postId}/comments`
+      );
+      const data = await response.json();
+      setCommentCounts((prev) => ({
+        ...prev,
+        [postId]: data.length,
+      }));
+    } catch (error) {
+      console.error("Error fetching comment count:", error);
+    }
+  };
+
+  // Fetch comments for a specific post
+  const fetchComments = async (postId) => {
+    if (postComments[postId]) return; // Already fetched
+
+    setLoadingComments((prev) => ({ ...prev, [postId]: true }));
+    try {
+      const response = await fetch(
+        `https://vibe-hive-omega.vercel.app/posts/${postId}/comments`
+      );
+      const data = await response.json();
+      setPostComments((prev) => ({
+        ...prev,
+        [postId]: data,
+      }));
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+      toast.error("Failed to load comments");
+    } finally {
+      setLoadingComments((prev) => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  // Toggle comments visibility
+  const toggleComments = (postId) => {
+    setShowComments((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+
+    // Fetch comments if showing and not already fetched
+    if (!showComments[postId] && !postComments[postId]) {
+      fetchComments(postId);
+    }
+  };
 
   // Handle vote actions
   const handleVote = async (postId, voteType) => {
@@ -43,33 +104,59 @@ const ForumPosts = () => {
     }
 
     try {
-      // Update local state immediately for better UX
+      // Make API call to update the vote on the server
+      const response = await fetch(
+        `https://vibe-hive-omega.vercel.app/posts/${postId}/vote`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            voteType,
+            userEmail: currentUser.email,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to vote");
+      }
+
+      const data = await response.json();
+
+      // Update local state with the response from server
       setPosts((prevPosts) =>
         prevPosts.map((post) => {
           if (post._id === postId) {
-            return {
-              ...post,
-              upVote: voteType === "up" ? post.upVote + 1 : post.upVote,
-              downVote: voteType === "down" ? post.downVote + 1 : post.downVote,
-            };
+            return data.post;
           }
           return post;
         })
       );
 
-      // Here you would make an API call to update the vote on the server
-      // await fetch(`https://vibe-hive-omega.vercel.app/posts/${postId}/vote`, {
-      //     method: 'PATCH',
-      //     headers: { 'Content-Type': 'application/json' },
-      //     body: JSON.stringify({ voteType })
-      // });
+      toast.success(
+        `${voteType === "up" ? "Upvoted" : "Downvoted"} successfully!`,
+        {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        }
+      );
     } catch (error) {
       console.error("Error voting:", error);
+      toast.error("Failed to vote. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
   // Handle comment submission
-  const handleCommentSubmit = (postId) => {
+  const handleCommentSubmit = async (postId) => {
     // Check if user is logged in
     if (!currentUser) {
       toast.error("Please log in to comment on posts!", {
@@ -84,9 +171,48 @@ const ForumPosts = () => {
     }
 
     const commentText = comments[postId];
-    if (commentText && commentText.trim()) {
-      // Here you would make an API call to submit the comment
-      console.log(`Comment on post ${postId}: ${commentText}`);
+    if (!commentText || !commentText.trim()) {
+      toast.error("Please enter a comment before submitting.", {
+        position: "top-right",
+        autoClose: 2000,
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `https://vibe-hive-omega.vercel.app/posts/${postId}/comments`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            comment: commentText,
+            userEmail: currentUser.email,
+            userName:
+              currentUser.displayName || currentUser.email.split("@")[0],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to add comment");
+      }
+
+      const data = await response.json();
+
+      // Add new comment to local state
+      setPostComments((prev) => ({
+        ...prev,
+        [postId]: [data.comment, ...(prev[postId] || [])],
+      }));
+
+      // Update comment count
+      setCommentCounts((prev) => ({
+        ...prev,
+        [postId]: (prev[postId] || 0) + 1,
+      }));
 
       // Show success toast
       toast.success("Comment posted successfully!", {
@@ -103,6 +229,20 @@ const ForumPosts = () => {
         ...prev,
         [postId]: "",
       }));
+
+      // Show comments if they weren't visible
+      if (!showComments[postId]) {
+        setShowComments((prev) => ({
+          ...prev,
+          [postId]: true,
+        }));
+      }
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast.error("Failed to post comment. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+      });
     }
   };
 
@@ -114,7 +254,19 @@ const ForumPosts = () => {
     }));
   };
 
-
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date
+      .toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+      .toUpperCase();
+  };
 
   if (loading) {
     return (
@@ -149,9 +301,9 @@ const ForumPosts = () => {
           >
             {/* Post Content */}
             <div className="p-3 sm:p-4">
-              {/* Date - Mobile: top, Desktop: as before */}
+              {/* Date */}
               <div className="text-xs text-blue-600 font-medium mb-3 sm:mb-4">
-                JUL 10 AT 3:36 PM {/* Using current date/time you provided */}
+                {formatDate(new Date().toISOString())}
               </div>
 
               {/* Mobile Layout: Stacked */}
@@ -182,7 +334,7 @@ const ForumPosts = () => {
                     {post.description}
                   </p>
 
-                  {/* Vote Buttons - Mobile: Horizontal */}
+                  {/* Vote Buttons - Mobile */}
                   <div className="flex items-center gap-2 mb-4">
                     <button
                       onClick={() => handleVote(post._id, "up")}
@@ -233,7 +385,7 @@ const ForumPosts = () => {
                     </button>
                   </div>
 
-                  {/* Comment Section - Mobile: Stacked */}
+                  {/* Comment Section - Mobile */}
                   <div className="space-y-2">
                     <input
                       type="text"
@@ -258,18 +410,67 @@ const ForumPosts = () => {
                         }
                       }}
                     />
-                    <button
-                      onClick={() => handleCommentSubmit(post._id)}
-                      className={`w-full px-4 py-2 text-sm rounded-md transition-colors ${
-                        currentUser
-                          ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      }`}
-                      disabled={!currentUser}
-                    >
-                      Reply
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleCommentSubmit(post._id)}
+                        className={`flex-1 px-4 py-2 text-sm rounded-md transition-colors ${
+                          currentUser
+                            ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                            : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        }`}
+                        disabled={!currentUser}
+                      >
+                        Reply
+                      </button>
+                      <button
+                        onClick={() => toggleComments(post._id)}
+                        className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                      >
+                        {showComments[post._id] ? "Hide" : "View"} Comments
+                        {commentCounts[post._id] !== undefined &&
+                          commentCounts[post._id] > 0 && (
+                            <span className="ml-1">
+                              ({commentCounts[post._id]})
+                            </span>
+                          )}
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Comments Display - Mobile */}
+                  {showComments[post._id] && (
+                    <div className="mt-4 space-y-3">
+                      {loadingComments[post._id] ? (
+                        <div className="text-center text-gray-500 text-sm">
+                          Loading comments...
+                        </div>
+                      ) : postComments[post._id] &&
+                        postComments[post._id].length > 0 ? (
+                        postComments[post._id].map((comment) => (
+                          <div
+                            key={comment._id}
+                            className="bg-gray-50 p-3 rounded-md"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium text-gray-900">
+                                {comment.userName}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {formatDate(comment.createdAt)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700">
+                              {comment.comment}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center text-gray-500 text-sm">
+                          No comments yet
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -348,10 +549,35 @@ const ForumPosts = () => {
                       </svg>
                       Downvote ({post.downVote})
                     </button>
+
+                    {/* View Comments Button */}
+                    <button
+                      onClick={() => toggleComments(post._id)}
+                      className="flex items-center gap-1 px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      {showComments[post._id] ? "Hide" : "View"} Comments
+                      {commentCounts[post._id] !== undefined &&
+                        commentCounts[post._id] > 0 && (
+                          <span className="ml-1">
+                            ({commentCounts[post._id]})
+                          </span>
+                        )}
+                    </button>
                   </div>
 
                   {/* Comment Section - Desktop */}
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 mb-4">
                     <input
                       type="text"
                       placeholder={
@@ -387,6 +613,41 @@ const ForumPosts = () => {
                       Reply
                     </button>
                   </div>
+
+                  {/* Comments Display - Desktop */}
+                  {showComments[post._id] && (
+                    <div className="space-y-3">
+                      {loadingComments[post._id] ? (
+                        <div className="text-center text-gray-500">
+                          Loading comments...
+                        </div>
+                      ) : postComments[post._id] &&
+                        postComments[post._id].length > 0 ? (
+                        postComments[post._id].map((comment) => (
+                          <div
+                            key={comment._id}
+                            className="bg-gray-50 p-3 rounded-md"
+                          >
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium text-gray-900">
+                                {comment.userName}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {formatDate(comment.createdAt)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700">
+                              {comment.comment}
+                            </p>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center text-gray-500">
+                          No comments yet
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

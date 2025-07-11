@@ -2,13 +2,13 @@ import React, { useState, useEffect, use } from "react";
 import { AuthContext } from "../providers/authContext";
 
 const MyPosts = () => {
-  
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const {currentUser} = use(AuthContext)
-  
-  const currentUserEmail = currentUser.email
+  const [commentCounts, setCommentCounts] = useState({});
+  const { currentUser } = use(AuthContext);
+
+  const currentUserEmail = currentUser.email;
 
   // Fetch user's posts
   useEffect(() => {
@@ -46,6 +46,13 @@ const MyPosts = () => {
         }
 
         setPosts(postsArray);
+
+        // Fetch comment counts for all posts
+        if (postsArray.length > 0) {
+          postsArray.forEach((post) => {
+            fetchCommentCount(post._id);
+          });
+        }
       } catch (error) {
         console.error("Error fetching posts:", error);
         setError(error.message);
@@ -57,6 +64,22 @@ const MyPosts = () => {
 
     fetchMyPosts();
   }, [currentUserEmail]);
+
+  // Fetch comment count for a specific post
+  const fetchCommentCount = async (postId) => {
+    try {
+      const response = await fetch(
+        `https://vibe-hive-omega.vercel.app/posts/${postId}/comments`
+      );
+      const data = await response.json();
+      setCommentCounts((prev) => ({
+        ...prev,
+        [postId]: data.length,
+      }));
+    } catch (error) {
+      console.error("Error fetching comment count:", error);
+    }
+  };
 
   // Format the date
   const formatDate = (dateString) => {
@@ -269,6 +292,24 @@ const MyPosts = () => {
                         </svg>
                         <span className="text-sm">{post.downVote || 0}</span>
                       </div>
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-sm">
+                          {commentCounts[post._id] !== undefined
+                            ? commentCounts[post._id]
+                            : 0}
+                        </span>
+                      </div>
                     </div>
 
                     <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">
@@ -281,7 +322,6 @@ const MyPosts = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

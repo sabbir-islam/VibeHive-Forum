@@ -59,7 +59,7 @@ const Banner = () => {
                 </li>
                 <li className="flex justify-between items-center">
                     <span className="font-medium">Topics</span>
-                    <span className="font-bold">19</span>
+                    <span className="font-bold">7</span>
                 </li>
                 <li className="flex justify-between items-center">
                     <span className="font-medium">Replies</span>

@@ -10,6 +10,7 @@ import PrivateRoute from "../providers/PrivateRoute";
 import AddPost from "../pages/AddPost";
 import LoadingPage from "../pages/LoadingPage";
 import MyPosts from "../pages/MyPosts";
+import Membership from "../pages/Membership";
 
 const router = createBrowserRouter([
   {
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: "/login",
         Component: Login
+      },
+      {
+        path: "/membership",
+        Component: Membership
       },
       {
         path: "/profile/:email",
