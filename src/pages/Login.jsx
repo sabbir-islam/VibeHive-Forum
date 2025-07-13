@@ -1,8 +1,23 @@
-import React, { use, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { AuthContext } from "../providers/authContext";
 import { toast } from "react-toastify";
+import axios from "axios";
+
+// Helper function to debug API response
+const debugApiResponse = (response) => {
+  console.log("API Response Type:", typeof response);
+  console.log("API Response Structure:", response);
+
+  if (Array.isArray(response)) {
+    console.log("Response is an array with", response.length, "items");
+  } else if (typeof response === "object") {
+    console.log("Response keys:", Object.keys(response));
+  }
+
+  return response;
+};
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -13,7 +28,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
-  const { signIn, signInWithGoogle } = use(AuthContext);
+  const { signIn, signInWithGoogle } = React.useContext(AuthContext);
 
   const navigate = useNavigate();
 
@@ -24,6 +39,200 @@ const Login = () => {
     // Clear errors when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  // Verify admin credentials against the API
+  const verifyAdminCredentials = async (email, password) => {
+    try {
+      console.log("Attempting admin login with:", { email });
+
+      // Try direct admin email check first
+      console.log(`Trying direct admin check for email: ${email}`);
+      try {
+        const directResponse = await axios.get(
+          `https://vibe-hive-omega.vercel.app/admin/check/${email}`
+        );
+        console.log("Direct admin check response:", directResponse.data);
+
+        if (directResponse.data && directResponse.data.isAdmin) {
+          console.log("Direct admin check successful");
+          // If this endpoint verifies the admin status, we can use it
+          return {
+            success: true,
+            admin: {
+              role: "admin",
+              name: directResponse.data.name || "Admin User",
+              email: email,
+              photo:
+                directResponse.data.photo ||
+                "https://i.ibb.co/ZJP3sFZ/admin.png",
+            },
+          };
+        }
+      } catch (directErr) {
+        console.log("Direct admin check failed:", directErr.message);
+        // Continue with the general admin endpoint if direct check fails
+      }
+
+      // Try the general admin data endpoint
+      const response = await axios.get(
+        "https://vibe-hive-omega.vercel.app/admin"
+      );
+
+      const adminData = response.data;
+      debugApiResponse(adminData);
+
+      // Extra debugging to diagnose response issues
+      console.log("Raw response:", JSON.stringify(response.data, null, 2));
+
+      // Handle different response formats (array of admins or single admin object)
+      if (Array.isArray(adminData)) {
+        console.log("Checking admin credentials in array format");
+        // Debug array contents
+        adminData.forEach((admin, index) => {
+          console.log(
+            `Admin ${index}:`,
+            admin.email ? admin.email : "No email property"
+          );
+        });
+
+        // Find admin in array - case insensitive email comparison
+        const admin = adminData.find(
+          (admin) =>
+            admin.email &&
+            admin.email.toLowerCase() === email.toLowerCase() &&
+            admin.password === password
+        );
+
+        if (admin) {
+          console.log("Admin found in array");
+          return {
+            success: true,
+            admin: {
+              ...admin,
+              role: "admin", // Ensure role is set to admin
+            },
+          };
+        }
+      } else if (adminData && typeof adminData === "object") {
+        console.log("Checking admin credentials in object format");
+        // Debug object properties
+        console.log("Admin object keys:", Object.keys(adminData));
+
+        // Direct object comparison - case insensitive email comparison
+        if (
+          adminData.email &&
+          adminData.email.toLowerCase() === email.toLowerCase() &&
+          adminData.password === password
+        ) {
+          console.log("Admin credentials matched");
+          return {
+            success: true,
+            admin: {
+              ...adminData,
+              role: "admin", // Ensure role is set to admin
+            },
+          };
+        }
+      }
+
+      // Special debugging for API response structure
+      if (!Array.isArray(adminData) && typeof adminData === "object") {
+        // Check if we need to look deeper in the response structure
+        for (const key in adminData) {
+          const value = adminData[key];
+          console.log(`Checking property ${key}:`, typeof value);
+
+          if (Array.isArray(value)) {
+            console.log(`Found array in property ${key}, checking for admins`);
+            const admin = value.find(
+              (item) =>
+                item.email &&
+                item.email.toLowerCase() === email.toLowerCase() &&
+                item.password === password
+            );
+
+            if (admin) {
+              console.log("Admin found in nested array");
+              return {
+                success: true,
+                admin: {
+                  ...admin,
+                  role: "admin", // Ensure role is set to admin
+                },
+              };
+            }
+          } else if (typeof value === "object" && value !== null) {
+            console.log(`Checking nested object in property ${key}`);
+            if (
+              value.email &&
+              value.email.toLowerCase() === email.toLowerCase() &&
+              value.password === password
+            ) {
+              console.log("Admin credentials matched in nested object");
+              return {
+                success: true,
+                admin: {
+                  ...value,
+                  role: "admin", // Ensure role is set to admin
+                },
+              };
+            }
+          }
+        }
+      }
+
+      // Fallback: hardcoded admin credentials for development/testing
+      if (
+        email.toLowerCase() === "admin@example.com" &&
+        password === "admin123"
+      ) {
+        console.log("Using hardcoded admin credentials (fallback)");
+        return {
+          success: true,
+          admin: {
+            role: "admin",
+            name: "Admin User",
+            email: email,
+            photo: "https://i.ibb.co/ZJP3sFZ/admin.png", // Default admin photo
+          },
+        };
+      }
+
+      console.log("Admin verification failed: Invalid credentials");
+      return {
+        success: false,
+        message: "Invalid admin credentials",
+      };
+    } catch (error) {
+      console.error("Admin verification error:", error);
+      console.error("Error details:", error.message);
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+        console.error("Error status:", error.response.status);
+      }
+
+      // Try fallback admin credentials if API fails
+      if (
+        email.toLowerCase() === "admin@example.com" &&
+        password === "admin123"
+      ) {
+        console.log("API failed, using hardcoded admin credentials");
+        return {
+          success: true,
+          admin: {
+            role: "admin",
+            name: "Admin User",
+            email: email,
+            photo: "https://i.ibb.co/ZJP3sFZ/admin.png", // Default admin photo
+          },
+        };
+      }
+
+      throw new Error(
+        error.response?.data?.message || "Admin verification failed"
+      );
     }
   };
 
@@ -46,26 +255,122 @@ const Login = () => {
 
     try {
       const { email, password } = formData;
-      await signIn(email, password);
-      toast.success("Login Successful");
-      console.log("Login type:", isAdminMode ? "Admin" : "User");
-      navigate("/");
+
+      if (isAdminMode) {
+        // Admin authentication flow
+        console.log("Attempting admin login with:", { email });
+
+        try {
+          // First try the hardcoded admin credentials for quick development access
+          if (
+            email.toLowerCase() === "admin@example.com" &&
+            password === "admin123"
+          ) {
+            console.log("Using hardcoded admin credentials");
+
+            const adminInfo = {
+              role: "admin",
+              name: "Admin User",
+              email: email,
+              photo: "https://i.ibb.co/ZJP3sFZ/admin.png",
+            };
+
+            // Store admin session info
+            localStorage.setItem("adminEmail", email);
+            localStorage.setItem("adminInfo", JSON.stringify(adminInfo));
+
+            toast.success("Admin login successful (development mode)");
+
+            console.log("Redirecting to admin dashboard...");
+            // Redirect to admin dashboard
+            setTimeout(() => {
+              window.location.href = "/admin/profile";
+            }, 1000);
+
+            // Set loading to false to prevent further processing
+            setLoading(false);
+            return;
+          }
+
+          // Try API admin verification
+          console.log("Checking API for admin credentials");
+          const adminData = await verifyAdminCredentials(email, password);
+          console.log("Admin verification result:", {
+            success: adminData.success,
+          });
+
+          if (adminData.success) {
+            console.log(
+              "Admin login successful, storing admin data:",
+              adminData.admin
+            );
+
+            if (!adminData.admin) {
+              throw new Error("Admin data is missing in the response");
+            }
+
+            // Ensure the admin data has all required fields
+            const completeAdminData = {
+              role: "admin",
+              name: adminData.admin.name || "Admin User",
+              email: adminData.admin.email || email,
+              photo:
+                adminData.admin.photo || "https://i.ibb.co/ZJP3sFZ/admin.png",
+              ...adminData.admin,
+            };
+
+            // Store admin session info
+            localStorage.setItem("adminEmail", email);
+            localStorage.setItem(
+              "adminInfo",
+              JSON.stringify(completeAdminData)
+            );
+
+            toast.success("Admin login successful");
+
+            console.log("Admin data stored, redirecting to dashboard");
+            // Use direct navigation to ensure the route is hit correctly
+            setTimeout(() => {
+              // Force a full page refresh to ensure the AuthProvider picks up the admin status
+              window.location.href = "/admin/profile";
+            }, 1000);
+            toast.success("Redirecting to admin dashboard...");
+          } else {
+            console.error("Admin verification failed:", adminData);
+            throw new Error(adminData.message || "Invalid admin credentials");
+          }
+        } catch (err) {
+          console.error("Error during admin authentication:", err);
+          throw new Error(err.message || "Admin login failed");
+        }
+      } else {
+        // Regular user authentication via Firebase
+        await signIn(email, password);
+        toast.success("Login Successful");
+        navigate("/");
+      }
     } catch (error) {
       console.error("Login error:", error);
 
-      // Handle specific Firebase errors
+      // Handle specific errors
       let errorMessage = "Login failed. Please try again.";
 
-      if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with this email address.";
-      } else if (error.code === "auth/wrong-password") {
-        errorMessage = "Incorrect password. Please try again.";
-      } else if (error.code === "auth/invalid-email") {
-        errorMessage = "Please enter a valid email address.";
-      } else if (error.code === "auth/too-many-requests") {
-        errorMessage = "Too many failed attempts. Please try again later.";
-      } else if (error.message) {
-        errorMessage = error.message;
+      if (isAdminMode) {
+        errorMessage = error.message || "Invalid admin credentials";
+        console.error("Admin login error details:", error);
+      } else {
+        // Firebase error handling
+        if (error.code === "auth/user-not-found") {
+          errorMessage = "No account found with this email address.";
+        } else if (error.code === "auth/wrong-password") {
+          errorMessage = "Incorrect password. Please try again.";
+        } else if (error.code === "auth/invalid-email") {
+          errorMessage = "Please enter a valid email address.";
+        } else if (error.code === "auth/too-many-requests") {
+          errorMessage = "Too many failed attempts. Please try again later.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
       }
 
       setErrors({ general: errorMessage });
@@ -76,11 +381,15 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    // Block Google sign-in for admin mode
+    if (isAdminMode) {
+      toast.error("Google sign-in is not available for admin accounts");
+      return;
+    }
+
     try {
       setLoading(true);
-      const result = await signInWithGoogle();
-      console.log("Google sign-in successful:", result);
-      console.log("Login type:", isAdminMode ? "Admin" : "User");
+      await signInWithGoogle();
       toast.success("Google sign-in successful!");
       navigate("/");
     } catch (error) {
@@ -226,7 +535,7 @@ const Login = () => {
                   <p className="font-medium mb-1">Admin Access</p>
                   <p>
                     You're signing in as an administrator. Only authorized
-                    person should access.
+                    personnel should access this area.
                   </p>
                 </div>
               </div>
@@ -249,7 +558,7 @@ const Login = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                  d="M16 12a4 4 0 10-8 0 4 4 0 018 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
                 />
               </svg>
               <input
@@ -373,7 +682,12 @@ const Login = () => {
           <div className="flex space-x-4">
             <button
               type="button"
-              className="flex-1 border border-gray-200 rounded-xl py-3 px-4 flex items-center justify-center hover:bg-gray-50 transition-colors"
+              className={`flex-1 border border-gray-200 rounded-xl py-3 px-4 flex items-center justify-center transition-colors ${
+                isAdminMode
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-50 cursor-pointer"
+              }`}
+              disabled={isAdminMode}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -386,7 +700,12 @@ const Login = () => {
             <button
               type="button"
               onClick={handleGoogleSignIn}
-              className="flex-1 border border-gray-200 cursor-pointer rounded-xl py-3 px-4 flex items-center justify-center hover:bg-gray-50 transition-colors"
+              disabled={isAdminMode}
+              className={`flex-1 border border-gray-200 rounded-xl py-3 px-4 flex items-center justify-center transition-colors ${
+                isAdminMode
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-gray-50 cursor-pointer"
+              }`}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path

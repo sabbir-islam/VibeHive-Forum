@@ -1,16 +1,21 @@
-import React, { useState, useRef, useEffect, use } from "react";
-import { Link, NavLink } from "react-router";
+import React, { useState, useRef, useEffect, useContext } from "react";
+import { Link, NavLink } from "react-router-dom";
 import { AuthContext } from "../providers/authContext";
 import { toast } from "react-toastify";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isAdminDropdownOpen, setIsAdminDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const adminDropdownRef = useRef(null);
 
   // Get auth context
-  const { currentUser, logout } = use(AuthContext);
+  const { currentUser, logout } = useContext(AuthContext);
   const isLoggedIn = !!currentUser;
+
+  // Check if user is admin based on role from the provided API
+  const isAdmin = currentUser?.role === "admin";
 
   // Handle logout
   const handleLogout = async () => {
@@ -42,6 +47,12 @@ const Navbar = () => {
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
+    if (isAdminDropdownOpen) setIsAdminDropdownOpen(false);
+  };
+
+  const toggleAdminDropdown = () => {
+    setIsAdminDropdownOpen(!isAdminDropdownOpen);
+    if (isDropdownOpen) setIsDropdownOpen(false);
   };
 
   // Close dropdown when clicking outside
@@ -49,6 +60,12 @@ const Navbar = () => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      if (
+        adminDropdownRef.current &&
+        !adminDropdownRef.current.contains(event.target)
+      ) {
+        setIsAdminDropdownOpen(false);
       }
     };
 
@@ -112,12 +129,16 @@ const Navbar = () => {
                 <NavLink to="/" className={navLinkClass}>
                   Home
                 </NavLink>
-                <NavLink to="/membership" className={navLinkClass}>
-                  Membership
-                </NavLink>
 
-                {/* User Dashboard Dropdown */}
-                {isLoggedIn && (
+                {/* Hide Membership link for admin users */}
+                {!isAdmin && (
+                  <NavLink to="/membership" className={navLinkClass}>
+                    Membership
+                  </NavLink>
+                )}
+
+                {/* User Dashboard Dropdown - only for regular users */}
+                {isLoggedIn && !isAdmin && (
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={toggleDropdown}
@@ -207,6 +228,123 @@ const Navbar = () => {
                             />
                           </svg>
                           My Posts
+                        </NavLink>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Admin Dashboard Dropdown - Shown only for admin users */}
+                {isLoggedIn && isAdmin && (
+                  <div className="relative" ref={adminDropdownRef}>
+                    <button
+                      onClick={toggleAdminDropdown}
+                      className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
+                        isAdminDropdownOpen
+                          ? "bg-purple-100 text-purple-700"
+                          : "text-gray-700 hover:text-purple-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      Admin Dashboard
+                      <svg
+                        className={`ml-1 h-4 w-4 transition-transform duration-200 ${
+                          isAdminDropdownOpen ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Admin Dropdown Menu */}
+                    {isAdminDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                        <NavLink
+                          to="/admin/profile"
+                          className={dropdownLinkClass}
+                          onClick={() => setIsAdminDropdownOpen(false)}
+                        >
+                          <svg
+                            className="w-4 h-4 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          Admin Profile
+                        </NavLink>
+                        <NavLink
+                          to="/admin/manage-users"
+                          className={dropdownLinkClass}
+                          onClick={() => setIsAdminDropdownOpen(false)}
+                        >
+                          <svg
+                            className="w-4 h-4 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                            />
+                          </svg>
+                          Manage Users
+                        </NavLink>
+                        <NavLink
+                          to="/admin/reported-activities"
+                          className={dropdownLinkClass}
+                          onClick={() => setIsAdminDropdownOpen(false)}
+                        >
+                          <svg
+                            className="w-4 h-4 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                            />
+                          </svg>
+                          Reported Comments/Activities
+                        </NavLink>
+                        <NavLink
+                          to="/admin/make-announcement"
+                          className={dropdownLinkClass}
+                          onClick={() => setIsAdminDropdownOpen(false)}
+                        >
+                          <svg
+                            className="w-4 h-4 mr-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"
+                            />
+                          </svg>
+                          Make Announcement
                         </NavLink>
                       </div>
                     )}
@@ -325,16 +463,19 @@ const Navbar = () => {
                 >
                   Home
                 </NavLink>
-                <NavLink
-                  to="/membership"
-                  className={mobileLinkClass}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Membership
-                </NavLink>
+                {/* Hide Membership for admin users */}
+                {!isAdmin && (
+                  <NavLink
+                    to="/membership"
+                    className={mobileLinkClass}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Membership
+                  </NavLink>
+                )}
 
-                {/* Mobile User Dashboard Menu */}
-                {isLoggedIn && (
+                {/* Mobile User Dashboard Menu - only for regular users */}
+                {isLoggedIn && !isAdmin && (
                   <>
                     <div className="border-t border-gray-200 pt-2 mt-2">
                       <div className="px-3 py-2 text-sm font-semibold text-gray-500">
@@ -360,6 +501,45 @@ const Navbar = () => {
                         onClick={() => setIsMenuOpen(false)}
                       >
                         My Posts
+                      </NavLink>
+                    </div>
+                  </>
+                )}
+
+                {/* Mobile Admin Dashboard Menu - Shown only for admin users */}
+                {isLoggedIn && isAdmin && (
+                  <>
+                    <div className="border-t border-gray-200 pt-2 mt-2">
+                      <div className="px-3 py-2 text-sm font-semibold text-purple-500">
+                        Admin Dashboard
+                      </div>
+                      <NavLink
+                        to="/admin/profile"
+                        className={mobileDropdownLinkClass}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Admin Profile
+                      </NavLink>
+                      <NavLink
+                        to="/admin/manage-users"
+                        className={mobileDropdownLinkClass}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Manage Users
+                      </NavLink>
+                      <NavLink
+                        to="/admin/reported-activities"
+                        className={mobileDropdownLinkClass}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Reported Comments/Activities
+                      </NavLink>
+                      <NavLink
+                        to="/admin/make-announcement"
+                        className={mobileDropdownLinkClass}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Make Announcement
                       </NavLink>
                     </div>
                   </>

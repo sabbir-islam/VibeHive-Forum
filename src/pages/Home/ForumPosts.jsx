@@ -273,7 +273,7 @@ const ForumPosts = () => {
   const tagList = [
     "technology",
     "programming",
-    "design",
+    "travel",
     "business",
     "science",
     "health",

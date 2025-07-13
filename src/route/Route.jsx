@@ -1,5 +1,9 @@
 import React from "react";
-import { createBrowserRouter, RouterProvider } from "react-router";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+} from "react-router-dom";
 import Home from "../pages/Home/Home";
 import Root from "../pages/Root";
 import NotFound from "../pages/NotFound";
@@ -11,6 +15,8 @@ import AddPost from "../pages/AddPost";
 import LoadingPage from "../pages/LoadingPage";
 import MyPosts from "../pages/MyPosts";
 import Membership from "../pages/Membership";
+import AdminGuard from "../pages/AdminGuard";
+import AdminProfile from "../pages/AdminProfile";
 
 const router = createBrowserRouter([
   {
@@ -20,7 +26,7 @@ const router = createBrowserRouter([
       {
         index: true,
         Component: Home,
-        hydrateFallbackElement: <LoadingPage></LoadingPage>
+        hydrateFallbackElement: <LoadingPage></LoadingPage>,
       },
       {
         path: "/register",
@@ -28,28 +34,89 @@ const router = createBrowserRouter([
       },
       {
         path: "/login",
-        Component: Login
+        Component: Login,
       },
       {
         path: "/membership",
-        Component: Membership
+        Component: Membership,
       },
       {
         path: "/profile/:email",
-        element: <PrivateRoute><UserProfile></UserProfile></PrivateRoute>,
-        loader:({params})=>fetch(`https://vibe-hive-omega.vercel.app/users/${params.email}`),
-        hydrateFallbackElement: <LoadingPage></LoadingPage>
+        element: (
+          <PrivateRoute>
+            <UserProfile></UserProfile>
+          </PrivateRoute>
+        ),
+        loader: ({ params }) =>
+          fetch(`https://vibe-hive-omega.vercel.app/users/${params.email}`),
+        hydrateFallbackElement: <LoadingPage></LoadingPage>,
       },
       {
         path: "/add-post",
-        element: <PrivateRoute><AddPost></AddPost></PrivateRoute>
+        element: (
+          <PrivateRoute>
+            <AddPost></AddPost>
+          </PrivateRoute>
+        ),
       },
       {
         path: "/my-posts",
-        element: <PrivateRoute><MyPosts></MyPosts></PrivateRoute>,
-        hydrateFallbackElement: <LoadingPage></LoadingPage>
-      }
-      ,
+        element: (
+          <PrivateRoute>
+            <MyPosts></MyPosts>
+          </PrivateRoute>
+        ),
+        hydrateFallbackElement: <LoadingPage></LoadingPage>,
+      },
+      {
+        path: "/admin",
+        element: <AdminGuard />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/admin/profile" replace />,
+          },
+          {
+            path: "profile",
+            element: <AdminProfile></AdminProfile>,
+          },
+          {
+            path: "manage-users",
+            element: (
+              <div className="min-h-screen p-8">
+                <h1 className="text-3xl font-bold mb-6">Manage Users</h1>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <p>This page will contain user management functionality.</p>
+                </div>
+              </div>
+            ),
+          },
+          {
+            path: "reported-activities",
+            element: (
+              <div className="min-h-screen p-8">
+                <h1 className="text-3xl font-bold mb-6">
+                  Reported Comments/Activities
+                </h1>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <p>This page will show reported content for moderation.</p>
+                </div>
+              </div>
+            ),
+          },
+          {
+            path: "make-announcement",
+            element: (
+              <div className="min-h-screen p-8">
+                <h1 className="text-3xl font-bold mb-6">Make Announcement</h1>
+                <div className="bg-white p-6 rounded-lg shadow-md">
+                  <p>This page will allow you to create new announcements.</p>
+                </div>
+              </div>
+            ),
+          },
+        ],
+      },
       {
         path: "*",
         Component: NotFound,

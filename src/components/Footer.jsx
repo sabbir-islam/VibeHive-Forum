@@ -39,7 +39,7 @@ const Footer = () => {
                 <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-yellow-500 rounded-lg mr-3 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">V</span>
                 </div>
-                <h3 className="text-2xl font-bold">VIBEHIBE</h3>
+                <h3 className="text-2xl font-bold">VIBEHIVE</h3>
               </div>
 
               {/* Description */}
@@ -198,7 +198,7 @@ const Footer = () => {
         <div className="bg-gradient-to-r from-slate-800 to-slate-900 py-4">
           <div className="max-w-7xl mx-auto px-6">
             <p className="text-center text-white text-sm">
-              Copyright © 2025 vibehibe. All Rights Reserved.
+              Copyright © 2025 Vibehive. All Rights Reserved.
             </p>
           </div>
         </div>

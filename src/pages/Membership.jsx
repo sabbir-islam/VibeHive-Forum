@@ -52,7 +52,7 @@ const Membership = () => {
           "Email support",
           "Access to general discussions",
         ],
-        color: "from-blue-500 to-blue-600",
+        color: "#3B82DE",
         popular: false,
       },
       premium: {
@@ -67,7 +67,7 @@ const Membership = () => {
           "Badge collection system",
           "Analytics dashboard",
         ],
-        color: "from-purple-500 to-purple-600",
+        color: "#3B82DE",
         popular: true,
       },
     },
@@ -83,7 +83,7 @@ const Membership = () => {
           "Email support",
           "Access to general discussions",
         ],
-        color: "from-blue-500 to-blue-600",
+        color: "#3B82DE",
         popular: false,
       },
       premium: {
@@ -99,7 +99,7 @@ const Membership = () => {
           "Badge collection system",
           "Analytics dashboard",
         ],
-        color: "from-purple-500 to-purple-600",
+        color: "#3B82DE",
         popular: true,
       },
     },
@@ -191,7 +191,7 @@ const Membership = () => {
 
     const expireDate = new Date(currentMembership.expireDate);
     return (
-      <div className="text-center mb-8 p-4 bg-gradient-to-r from-purple-100 to-blue-100 rounded-xl">
+      <div className="text-center mb-8 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
           Current Membership Status
         </h3>
@@ -209,15 +209,12 @@ const Membership = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Choose Your{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
-              Membership
-            </span>
+            Choose Your <span style={{ color: "#3B82DE" }}>Membership</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Unlock premium features and elevate your forum experience with our
@@ -230,13 +227,13 @@ const Membership = () => {
 
         {/* Toggle Switch */}
         <div className="flex justify-center mb-12">
-          <div className="bg-white rounded-full p-1 shadow-lg border">
-            <div className="flex items-center space-x-4">
+          <div className="bg-white rounded-lg p-1 shadow-sm border border-gray-200">
+            <div className="flex items-center">
               <button
                 onClick={() => setIsAnnual(false)}
-                className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
                   !isAnnual
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                    ? `bg-[#3B82DE] text-white`
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
@@ -244,14 +241,14 @@ const Membership = () => {
               </button>
               <button
                 onClick={() => setIsAnnual(true)}
-                className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 relative ${
+                className={`px-6 py-3 rounded-lg font-medium transition-all relative ${
                   isAnnual
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg"
+                    ? `bg-[#3B82DE] text-white`
                     : "text-gray-600 hover:text-gray-900"
                 }`}
               >
                 Annual
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                <span className="absolute -top-2 -right-2 bg-gray-800 text-white text-xs px-2 py-0.5 rounded-full">
                   Save 17%
                 </span>
               </button>
@@ -264,23 +261,26 @@ const Membership = () => {
           {Object.entries(currentPlans).map(([planType, plan]) => (
             <div
               key={planType}
-              className={`relative bg-white rounded-3xl shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:scale-105 border-2 ${
+              className={`relative bg-white rounded-lg shadow-sm overflow-hidden transition-all border-2 ${
                 selectedPlan === planType
-                  ? "border-purple-500"
-                  : "border-transparent"
+                  ? "border-[#3B82DE]"
+                  : "border-gray-200"
               } ${plan.popular ? "transform scale-105" : ""}`}
             >
               {plan.popular && (
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-purple-500 to-blue-500 text-white text-center py-2 font-semibold">
-                  🔥 Most Popular
+                <div className="absolute top-0 left-0 right-0 bg-gray-800 text-white text-center py-1 text-sm font-medium">
+                  Most Popular
                 </div>
               )}
 
-              <div className={`h-2 bg-gradient-to-r ${plan.color}`}></div>
+              <div
+                style={{ backgroundColor: "#3B82DE" }}
+                className={`h-1 ${plan.popular ? "mt-6" : ""}`}
+              ></div>
 
-              <div className="p-8">
+              <div className="p-6">
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
                     {plan.name}
                   </h3>
                   <div className="flex items-center justify-center mb-4">
@@ -296,18 +296,19 @@ const Membership = () => {
                       <span className="text-gray-500 line-through">
                         ${plan.originalPrice}
                       </span>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm font-semibold">
+                      <span className="bg-gray-100 text-gray-800 px-2 py-0.5 rounded-lg text-sm font-medium">
                         Save ${(plan.originalPrice - plan.price).toFixed(2)}
                       </span>
                     </div>
                   )}
                 </div>
 
-                <ul className="space-y-4 mb-8">
+                <ul className="space-y-3 mb-8">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start space-x-3">
                       <div
-                        className={`w-5 h-5 rounded-full bg-gradient-to-r ${plan.color} flex items-center justify-center flex-shrink-0 mt-0.5`}
+                        style={{ backgroundColor: "#3B82DE" }}
+                        className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5`}
                       >
                         <svg
                           className="w-3 h-3 text-white"
@@ -331,18 +332,17 @@ const Membership = () => {
                 <button
                   onClick={() => handlePlanSelect(planType)}
                   disabled={loading}
-                  className={`w-full py-4 rounded-2xl font-semibold text-lg transition-all duration-300 ${
+                  style={{ backgroundColor: loading ? "#CBD5E1" : "#3B82DE" }}
+                  className={`w-full py-3 rounded-lg font-medium text-base transition-all ${
                     loading
-                      ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                      : selectedPlan === planType
-                      ? `bg-gradient-to-r ${plan.color} text-white shadow-lg transform scale-105`
-                      : `bg-gradient-to-r ${plan.color} text-white hover:shadow-lg hover:transform hover:scale-105`
+                      ? "text-gray-600 cursor-not-allowed"
+                      : "text-white hover:opacity-90"
                   }`}
                 >
                   {loading
                     ? "Processing..."
                     : selectedPlan === planType
-                    ? "Selected!"
+                    ? "Selected"
                     : "Choose Plan"}
                 </button>
               </div>
@@ -351,15 +351,18 @@ const Membership = () => {
         </div>
 
         {/* Additional Features Section */}
-        <div className="mt-16 bg-white rounded-3xl shadow-xl p-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+        <div className="mt-16 bg-white rounded-lg shadow-sm p-8 border border-gray-200">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
             Why Choose Our Membership?
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div
+                style={{ backgroundColor: "#3B82DE" }}
+                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <svg
-                  className="w-8 h-8 text-white"
+                  className="w-6 h-6 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -372,7 +375,7 @@ const Membership = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Lightning Fast
               </h3>
               <p className="text-gray-600">
@@ -381,9 +384,12 @@ const Membership = () => {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div
+                style={{ backgroundColor: "#3B82DE" }}
+                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <svg
-                  className="w-8 h-8 text-white"
+                  className="w-6 h-6 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -396,7 +402,7 @@ const Membership = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Secure & Reliable
               </h3>
               <p className="text-gray-600">
@@ -404,9 +410,12 @@ const Membership = () => {
               </p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div
+                style={{ backgroundColor: "#3B82DE" }}
+                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
                 <svg
-                  className="w-8 h-8 text-white"
+                  className="w-6 h-6 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -419,7 +428,7 @@ const Membership = () => {
                   />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 24/7 Support
               </h3>
               <p className="text-gray-600">
@@ -431,12 +440,12 @@ const Membership = () => {
         </div>
 
         {/* FAQ Section */}
-        <div className="mt-16 bg-gradient-to-r from-purple-50 to-blue-50 rounded-3xl p-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+        <div className="mt-16 bg-white rounded-lg shadow-sm p-8 border border-gray-200">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
             Frequently Asked Questions
           </h2>
           <div className="space-y-6 max-w-3xl mx-auto">
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="border-b border-gray-200 pb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Can I cancel my membership anytime?
               </h3>
@@ -445,7 +454,7 @@ const Membership = () => {
                 will continue until the end of your current billing period.
               </p>
             </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="border-b border-gray-200 pb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Is there a free trial available?
               </h3>
@@ -454,7 +463,7 @@ const Membership = () => {
                 required to start your trial.
               </p>
             </div>
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
+            <div className="pb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 What payment methods do you accept?
               </h3>

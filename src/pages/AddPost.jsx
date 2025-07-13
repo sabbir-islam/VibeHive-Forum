@@ -120,7 +120,7 @@ const AddPost = () => {
   const tagOptions = [
     { value: "technology", label: "Technology" },
     { value: "programming", label: "Programming" },
-    { value: "design", label: "Design" },
+    { value: "travel", label: "Travel" },
     { value: "business", label: "Business" },
     { value: "science", label: "Science" },
     { value: "health", label: "Health" },
