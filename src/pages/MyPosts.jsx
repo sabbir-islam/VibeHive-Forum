@@ -1,5 +1,6 @@
 import React, { useState, useEffect, use } from "react";
 import { AuthContext } from "../providers/authContext";
+import { Link } from "react-router";
 
 const MyPosts = () => {
   const [posts, setPosts] = useState([]);
@@ -150,9 +151,11 @@ const MyPosts = () => {
           <p className="text-gray-500 mb-6">
             You haven't created any posts yet. Start sharing your thoughts!
           </p>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+          <Link to={'/add-post'}>
+            <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
             Create Your First Post
           </button>
+          </Link>
         </div>
       )}
 
