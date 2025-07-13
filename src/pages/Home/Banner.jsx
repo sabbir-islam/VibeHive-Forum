@@ -9,6 +9,31 @@ const Banner = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [showResults, setShowResults] = useState(false);
+    const [stats, setStats] = useState({
+        userCount: 0,
+        forumCount: 0,
+        topicCount: 0,
+        replyCount: 0,
+        tagCount: 7
+    });
+    const [statsLoading, setStatsLoading] = useState(true);
+
+    // Fetch forum statistics
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                setStatsLoading(true);
+                const response = await axios.get(`https://vibe-hive-omega.vercel.app/forum-stats`);
+                setStats(response.data);
+                setStatsLoading(false);
+            } catch (err) {
+                console.error("Error fetching forum stats:", err);
+                setStatsLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
 
     const handleSearch = async () => {
         if (searchText.trim()) {
@@ -86,28 +111,36 @@ const Banner = () => {
                     {/* Right Content */}
                     <div className="mt-10 md:mt-0 md:w-1/3">
                         <div className="bg-slate-800 bg-opacity-10 backdrop-filter backdrop-blur-lg rounded-lg p-6 text-[#3B82DE] shadow-lg border border-slate-800 border-opacity-20">
-                            <ul className="space-y-4">
-                                <li className="flex justify-between items-center">
-                                    <span className="font-medium">Registered Users</span>
-                                    <span className="font-bold">1</span>
-                                </li>
-                                <li className="flex justify-between items-center">
-                                    <span className="font-medium">Forums</span>
-                                    <span className="font-bold">6</span>
-                                </li>
-                                <li className="flex justify-between items-center">
-                                    <span className="font-medium">Topics</span>
-                                    <span className="font-bold">7</span>
-                                </li>
-                                <li className="flex justify-between items-center">
-                                    <span className="font-medium">Replies</span>
-                                    <span className="font-bold">60</span>
-                                </li>
-                                <li className="flex justify-between items-center">
-                                    <span className="font-medium">Topic Tags</span>
-                                    <span className="font-bold">21</span>
-                                </li>
-                            </ul>
+                            {statsLoading ? (
+                                <div className="flex justify-center items-center h-48">
+                                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                                        <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading stats...</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <ul className="space-y-4">
+                                    <li className="flex justify-between items-center">
+                                        <span className="font-medium">Registered Users</span>
+                                        <span className="font-bold">{stats.userCount}</span>
+                                    </li>
+                                    <li className="flex justify-between items-center">
+                                        <span className="font-medium">Forums</span>
+                                        <span className="font-bold">{stats.forumCount}</span>
+                                    </li>
+                                    <li className="flex justify-between items-center">
+                                        <span className="font-medium">Topics</span>
+                                        <span className="font-bold">{stats.topicCount}</span>
+                                    </li>
+                                    <li className="flex justify-between items-center">
+                                        <span className="font-medium">Replies</span>
+                                        <span className="font-bold">{stats.replyCount}</span>
+                                    </li>
+                                    <li className="flex justify-between items-center">
+                                        <span className="font-medium">Topic Tags</span>
+                                        <span className="font-bold">7</span>
+                                    </li>
+                                </ul>
+                            )}
                         </div>
                     </div>
                 </div>
