@@ -18,6 +18,7 @@ import Membership from "../pages/Membership";
 import AdminGuard from "../pages/AdminGuard";
 import AdminProfile from "../pages/AdminProfile";
 import ManageUser from "../pages/ManageUser";
+import Announcement from "../pages/Announcement";
 
 const router = createBrowserRouter([
   {
@@ -100,14 +101,7 @@ const router = createBrowserRouter([
           },
           {
             path: "make-announcement",
-            element: (
-              <div className="min-h-screen p-8">
-                <h1 className="text-3xl font-bold mb-6">Make Announcement</h1>
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <p>This page will allow you to create new announcements.</p>
-                </div>
-              </div>
-            ),
+            element: <Announcement></Announcement>
           },
         ],
       },
