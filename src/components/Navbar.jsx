@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useContext } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { AuthContext } from "../providers/authContext";
 import { toast } from "react-toastify";
+import NavbarNotification from "./NavbarNotification";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -356,23 +357,7 @@ const Navbar = () => {
             {/* Right side - Notification and Join Us/User Info */}
             <div className="hidden md:flex items-center space-x-4">
               {/* Notification Icon */}
-              <button className="p-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-full transition-colors duration-200 relative">
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 17h5l-3.394-3.394A10 10 0 0121 10.5c0-5.243-4.243-9.5-9.5-9.5S2 5.257 2 10.5a10 10 0 00.394 3.394L2 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                  />
-                </svg>
-                {/* Notification badge */}
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse"></span>
-              </button>
+              {isLoggedIn && <NavbarNotification />}
 
               {/* Join Us Button (when not logged in) or User Info (when logged in) */}
               {!isLoggedIn ? (
@@ -547,22 +532,7 @@ const Navbar = () => {
 
                 {/* Mobile Notification and Join Us/User Info */}
                 <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200 mt-2 pt-2">
-                  <button className="p-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-full transition-colors duration-200 relative">
-                    <svg
-                      className="h-6 w-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 17h5l-3.394-3.394A10 10 0 0121 10.5c0-5.243-4.243-9.5-9.5-9.5S2 5.257 2 10.5a10 10 0 00.394 3.394L2 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                      />
-                    </svg>
-                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse"></span>
-                  </button>
+                  {isLoggedIn && <NavbarNotification />}
 
                   {!isLoggedIn ? (
                     <Link to={"/register"}>

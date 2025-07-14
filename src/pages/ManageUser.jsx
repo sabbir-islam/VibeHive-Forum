@@ -7,6 +7,11 @@ const ManageUser = () => {
   const [error, setError] = useState(null);
   const [processingUser, setProcessingUser] = useState(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage, setUsersPerPage] = useState(10);
+  const userPerPageOptions = [5, 10, 20];
+
   // Fetch users on component mount
   useEffect(() => {
     fetchUsers();
@@ -65,6 +70,9 @@ const ManageUser = () => {
         )
       );
 
+      // Reset to first page to help user find the updated user
+      setCurrentPage(1);
+
       toast.success("User role updated successfully");
     } catch (err) {
       console.error("Error updating user role:", err);
@@ -90,6 +98,22 @@ const ManageUser = () => {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  // Calculate pagination values here
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+
+  // Change page function
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  // Handle changing the number of users per page
+  const handleUsersPerPageChange = (e) => {
+    const newUsersPerPage = parseInt(e.target.value);
+    setUsersPerPage(newUsersPerPage);
+    // Reset to first page when changing the number of users per page
+    setCurrentPage(1);
   };
 
   if (loading) {
@@ -179,8 +203,8 @@ const ManageUser = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.length > 0 ? (
-                  users.map((user) => (
+                {currentUsers.length > 0 ? (
+                  currentUsers.map((user) => (
                     <tr key={user._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -334,7 +358,9 @@ const ManageUser = () => {
                       colSpan="5"
                       className="px-6 py-4 text-center text-sm text-gray-500"
                     >
-                      No users found
+                      {users.length > 0
+                        ? "No users found on this page"
+                        : "No users found"}
                     </td>
                   </tr>
                 )}
@@ -343,8 +369,186 @@ const ManageUser = () => {
           </div>
         </div>
 
-        <div className="mt-4 text-right text-sm text-gray-500">
-          Total users: {users.length}
+        {/* Pagination */}
+        <div className="mt-4 flex justify-between items-center">
+          <div className="text-sm text-gray-500 flex items-center">
+            {users.length > 0 ? (
+              <>
+                <span className="mr-4">
+                  Showing{" "}
+                  <span className="font-medium text-gray-700">
+                    {indexOfFirstUser + 1} -{" "}
+                    {indexOfLastUser > users.length
+                      ? users.length
+                      : indexOfLastUser}{" "}
+                  </span>
+                  of{" "}
+                  <span className="font-medium text-gray-700">
+                    {users.length}
+                  </span>{" "}
+                  users
+                </span>
+
+                <div className="flex items-center">
+                  <label htmlFor="usersPerPage" className="mr-2">
+                    Show:
+                  </label>
+                  <select
+                    id="usersPerPage"
+                    value={usersPerPage}
+                    onChange={handleUsersPerPageChange}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {userPerPageOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            ) : (
+              "No users to display"
+            )}
+          </div>
+
+          <div>
+            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              <button
+                onClick={() => {
+                  if (currentPage > 1) {
+                    paginate(currentPage - 1);
+                  }
+                }}
+                disabled={currentPage === 1 || users.length === 0}
+                className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
+                  currentPage === 1 || users.length === 0
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
+                style={
+                  currentPage !== 1 && users.length > 0
+                    ? { backgroundColor: "#EFF6FF" }
+                    : {}
+                }
+              >
+                <span className="sr-only">Previous</span>
+                <svg
+                  className="h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Show limited page numbers with ellipsis for better UX */}
+              {Array.from(
+                { length: Math.ceil(users.length / usersPerPage) },
+                (_, i) => i + 1
+              ).map((pageNumber) => {
+                // Show current page and 1 page before and after
+                const pageNumbersToShow = [
+                  1,
+                  Math.ceil(users.length / usersPerPage),
+                ];
+                if (currentPage > 1) pageNumbersToShow.push(currentPage - 1);
+                if (currentPage < Math.ceil(users.length / usersPerPage))
+                  pageNumbersToShow.push(currentPage + 1);
+                pageNumbersToShow.push(currentPage);
+
+                // Only show certain page numbers and ellipsis
+                if (
+                  pageNumbersToShow.includes(pageNumber) ||
+                  Math.ceil(users.length / usersPerPage) <= 5 ||
+                  (pageNumber <= 5 &&
+                    Math.ceil(users.length / usersPerPage) <= 7)
+                ) {
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => paginate(pageNumber)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        pageNumber === currentPage
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-gray-500 hover:bg-gray-50"
+                      }`}
+                      style={
+                        pageNumber === currentPage
+                          ? { backgroundColor: "#3B82DE" }
+                          : {}
+                      }
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                }
+                // Show ellipsis for skipped pages
+                else if (
+                  (pageNumber === 2 && currentPage > 3) ||
+                  (pageNumber === Math.ceil(users.length / usersPerPage) - 1 &&
+                    currentPage < Math.ceil(users.length / usersPerPage) - 2)
+                ) {
+                  return (
+                    <span
+                      key={pageNumber}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+
+              <button
+                onClick={() => {
+                  if (currentPage < Math.ceil(users.length / usersPerPage)) {
+                    paginate(currentPage + 1);
+                  }
+                }}
+                disabled={
+                  currentPage === Math.ceil(users.length / usersPerPage) ||
+                  users.length === 0
+                }
+                className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 ${
+                  currentPage === Math.ceil(users.length / usersPerPage) ||
+                  users.length === 0
+                    ? "cursor-not-allowed opacity-50"
+                    : "cursor-pointer"
+                }`}
+                style={
+                  currentPage !== Math.ceil(users.length / usersPerPage) &&
+                  users.length > 0
+                    ? { backgroundColor: "#EFF6FF" }
+                    : {}
+                }
+              >
+                <span className="sr-only">Next</span>
+                <svg
+                  className="h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </nav>
+          </div>
         </div>
       </div>
     </div>

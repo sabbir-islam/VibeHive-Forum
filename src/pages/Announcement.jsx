@@ -1,10 +1,12 @@
 import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { AuthContext } from "../providers/authContext";
+import { useNotifications } from "../contexts/notificationContext";
 import { toast } from "react-toastify";
 
 const Announcement = () => {
   const { currentUser } = useContext(AuthContext);
+  const { fetchAnnouncements } = useNotifications();
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -86,6 +88,9 @@ const Announcement = () => {
       );
 
       toast.success("Announcement posted successfully!");
+
+      // Refresh notifications after posting a new announcement
+      fetchAnnouncements();
       setFormData({
         ...formData,
         title: "",
