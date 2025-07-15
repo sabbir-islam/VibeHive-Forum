@@ -12,6 +12,7 @@ import Login from "../pages/Login";
 import UserProfile from "../pages/UserProfile";
 import PrivateRoute from "../providers/PrivateRoute";
 import AddPost from "../pages/AddPost";
+import EditPost from "../pages/EditPost";
 import LoadingPage from "../pages/LoadingPage";
 import MyPosts from "../pages/MyPosts";
 import Membership from "../pages/Membership";
@@ -19,6 +20,7 @@ import AdminGuard from "../pages/AdminGuard";
 import AdminProfile from "../pages/AdminProfile";
 import ManageUser from "../pages/ManageUser";
 import Announcement from "../pages/Announcement";
+import Comments from "../pages/Comments";
 
 const router = createBrowserRouter([
   {
@@ -62,10 +64,28 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/edit-post/:postId",
+        element: (
+          <PrivateRoute>
+            <EditPost></EditPost>
+          </PrivateRoute>
+        ),
+        hydrateFallbackElement: <LoadingPage></LoadingPage>,
+      },
+      {
         path: "/my-posts",
         element: (
           <PrivateRoute>
             <MyPosts></MyPosts>
+          </PrivateRoute>
+        ),
+        hydrateFallbackElement: <LoadingPage></LoadingPage>,
+      },
+      {
+        path: "/comments/:postId",
+        element: (
+          <PrivateRoute>
+            <Comments></Comments>
           </PrivateRoute>
         ),
         hydrateFallbackElement: <LoadingPage></LoadingPage>,
@@ -84,7 +104,7 @@ const router = createBrowserRouter([
           },
           {
             path: "manage-users",
-            element:<ManageUser></ManageUser>
+            element: <ManageUser></ManageUser>,
           },
           {
             path: "reported-activities",
@@ -101,7 +121,7 @@ const router = createBrowserRouter([
           },
           {
             path: "make-announcement",
-            element: <Announcement></Announcement>
+            element: <Announcement></Announcement>,
           },
         ],
       },

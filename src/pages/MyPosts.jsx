@@ -1,6 +1,8 @@
 import React, { useState, useEffect, use } from "react";
 import { AuthContext } from "../providers/authContext";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import axios from "axios";
 
 const MyPosts = () => {
   const [posts, setPosts] = useState([]);
@@ -8,6 +10,7 @@ const MyPosts = () => {
   const [error, setError] = useState(null);
   const [commentCounts, setCommentCounts] = useState({});
   const { currentUser } = use(AuthContext);
+  const navigate = useNavigate();
 
   const currentUserEmail = currentUser.email;
 
@@ -24,16 +27,12 @@ const MyPosts = () => {
         setError(null);
         console.log("Fetching posts for email:", currentUserEmail);
 
-        const response = await fetch(
+        const response = await axios.get(
           `https://vibe-hive-omega.vercel.app/posts/${currentUserEmail}`
         );
         console.log("Response status:", response.status);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = response.data;
         console.log("Fetched posts data:", data);
 
         // Handle different response structures
@@ -69,10 +68,10 @@ const MyPosts = () => {
   // Fetch comment count for a specific post
   const fetchCommentCount = async (postId) => {
     try {
-      const response = await fetch(
+      const response = await axios.get(
         `https://vibe-hive-omega.vercel.app/posts/${postId}/comments`
       );
-      const data = await response.json();
+      const data = response.data;
       setCommentCounts((prev) => ({
         ...prev,
         [postId]: data.length,
@@ -92,16 +91,135 @@ const MyPosts = () => {
     });
   };
 
-  // Handle post deletion (you can implement this later)
+  // Handle post deletion
   const handleDeletePost = async (postId) => {
-    // Implement delete functionality
-    console.log("Delete post:", postId);
+  // Show SweetAlert2 confirmation dialog with custom styling
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to revert this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#4f46e5", 
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Yes, delete it!",
+    customClass: {
+      title: "text-gray-800 font-bold",
+      htmlContainer: "text-gray-600",
+      popup: "rounded-lg shadow-md",
+    },
+  });
+
+  // If user didn't confirm, exit the function
+  if (!result.isConfirmed) return;
+
+  try {
+    // Show loading indicator
+    Swal.fire({
+      title: "Deleting...",
+      text: "Please wait while we delete your post",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
+
+    // Send delete request to the server using axios with email query parameter
+    console.log(`Deleting post with ID: ${postId}`);
+
+    // Add the email query parameter to the delete request
+    try {
+      const response = await axios.delete(
+        `https://vibe-hive-omega.vercel.app/posts/${postId}?email=${currentUserEmail}`
+      );
+      console.log("Delete response:", response.data);
+    } catch (firstError) {
+      console.error("First delete attempt failed:", firstError);
+
+      // If first attempt fails, try an alternative endpoint structure
+      console.log("Trying alternative endpoint...");
+      const altResponse = await axios.delete(
+        `https://vibe-hive-omega.vercel.app/post/${postId}?email=${currentUserEmail}`
+      );
+      console.log("Alternative delete response:", altResponse.data);
+    }
+
+    // Remove the deleted post from the state
+    setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId));
+
+    // Show success message with SweetAlert2
+    Swal.fire({
+      title: "Deleted!",
+      text: "Your post has been deleted.",
+      icon: "success",
+      customClass: {
+        title: "text-gray-800 font-bold",
+        htmlContainer: "text-gray-600",
+        popup: "rounded-lg shadow-md",
+      },
+    });
+  } catch (error) {
+    // Error handling code remains the same
+    console.error("Error deleting post:", error);
+    
+    // Get detailed error message
+    let errorMessage;
+
+    if (error.response) {
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      console.error("Error response headers:", error.response.headers);
+
+      errorMessage = `Error ${error.response.status}: ${
+        error.response.data?.message ||
+        error.response.statusText ||
+        "Unknown error"
+      }`;
+    } else if (error.request) {
+      console.error("Error request:", error.request);
+      errorMessage =
+        "No response received from server. Please check your connection.";
+    } else {
+      console.error("Error message:", error.message);
+      errorMessage = error.message || "Unknown error occurred";
+    }
+
+    console.error("Detailed error:", errorMessage);
+    setError(`Failed to delete post: ${errorMessage}`);
+
+    // Show error message with SweetAlert2
+    Swal.fire({
+      title: "Error!",
+      text: `Failed to delete post: ${errorMessage}`,
+      icon: "error",
+      customClass: {
+        title: "text-gray-800 font-bold",
+        htmlContainer: "text-gray-600",
+        popup: "rounded-lg shadow-md",
+      },
+    });
+  }
+};
+
+  // Handle post editing
+  const handleEditPost = (postId) => {
+    // Find the post to edit
+    const postToEdit = posts.find((post) => post._id === postId);
+
+    if (postToEdit) {
+      // Navigate to the new edit post page with the post data
+      navigate(`/edit-post/${postId}`, {
+        state: {
+          postData: postToEdit,
+        },
+      });
+    } else {
+      setError("Post not found. Please refresh the page and try again.");
+    }
   };
 
-  // Handle post editing (you can implement this later)
-  const handleEditPost = (postId) => {
-    // Implement edit functionality
-    console.log("Edit post:", postId);
+  // Navigate to comments page
+  const handleViewComments = (postId) => {
+    navigate(`/comments/${postId}`);
   };
 
   return (
@@ -151,10 +269,10 @@ const MyPosts = () => {
           <p className="text-gray-500 mb-6">
             You haven't created any posts yet. Start sharing your thoughts!
           </p>
-          <Link to={'/add-post'}>
+          <Link to={"/add-post"}>
             <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
-            Create Your First Post
-          </button>
+              Create Your First Post
+            </button>
           </Link>
         </div>
       )}
@@ -164,9 +282,11 @@ const MyPosts = () => {
         <div>
           <div className="mb-6 flex justify-between items-center">
             <p className="text-gray-600">Total posts: {posts.length}</p>
-            <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-              Create New Post
-            </button>
+            <Link to="/add-post">
+              <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                Create New Post
+              </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -295,7 +415,11 @@ const MyPosts = () => {
                         </svg>
                         <span className="text-sm">{post.downVote || 0}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-gray-500">
+                      <div
+                        className="flex items-center gap-1 text-gray-500 cursor-pointer hover:text-indigo-600"
+                        onClick={() => handleViewComments(post._id)}
+                        title="View comments"
+                      >
                         <svg
                           className="w-4 h-4"
                           fill="currentColor"
@@ -315,7 +439,10 @@ const MyPosts = () => {
                       </div>
                     </div>
 
-                    <button className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">
+                    <button
+                      onClick={() => handleViewComments(post._id)}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors"
+                    >
                       View Details
                     </button>
                   </div>

@@ -70,6 +70,7 @@ const AddPost = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Check post limit for basic users
     if (!membership?.isActive || membership?.plan === "basic") {
       if (postCount >= 5) {
         toast.error(
@@ -83,7 +84,7 @@ const AddPost = () => {
     setLoading(true);
 
     try {
-      // Create form data for file upload
+      // Create form data for submission
       const postData = {
         ...formData,
         tag: formData.tag?.value || "",
@@ -91,15 +92,15 @@ const AddPost = () => {
         downVote: parseInt(formData.downVote) || 0,
       };
 
-      // If you need to upload the image first, you'd do that here
-      // and then include the URL in postData
-
-      // Replace with your API endpoint
+      // Create new post
       await axios.post("https://vibe-hive-omega.vercel.app/posts", postData);
       toast.success("Post added successfully!");
 
       // Reset form after successful submission
       setFormData({
+        authorImage: currentUser?.photoURL || "",
+        authorName: currentUser?.displayName || "",
+        authorEmail: currentUser?.email || "",
         title: "",
         description: "",
         tag: null,
@@ -109,6 +110,9 @@ const AddPost = () => {
 
       // After successful post creation, update the post count
       setPostCount((prev) => prev + 1);
+
+      // Redirect to My Posts page after successful operation
+      navigate("/my-posts");
     } catch (error) {
       console.error("Error adding post:", error);
       toast.error("Failed to add post. Please try again.");
