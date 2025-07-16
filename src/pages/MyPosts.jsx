@@ -12,7 +12,7 @@ const MyPosts = () => {
   // Add pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [postsPerPage, setPostsPerPage] = useState(10);
-  
+
   const { currentUser } = use(AuthContext);
   const navigate = useNavigate();
 
@@ -97,112 +97,112 @@ const MyPosts = () => {
 
   // Handle post deletion
   const handleDeletePost = async (postId) => {
-  // Show SweetAlert2 confirmation dialog with custom styling
-  const result = await Swal.fire({
-    title: "Are you sure?",
-    text: "You won't be able to revert this!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#4f46e5", 
-    cancelButtonColor: "#d33",
-    confirmButtonText: "Yes, delete it!",
-    customClass: {
-      title: "text-gray-800 font-bold",
-      htmlContainer: "text-gray-600",
-      popup: "rounded-lg shadow-md",
-    },
-  });
-
-  // If user didn't confirm, exit the function
-  if (!result.isConfirmed) return;
-
-  try {
-    // Show loading indicator
-    Swal.fire({
-      title: "Deleting...",
-      text: "Please wait while we delete your post",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
+    // Show SweetAlert2 confirmation dialog with custom styling
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#4f46e5",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+      customClass: {
+        title: "text-gray-800 font-bold",
+        htmlContainer: "text-gray-600",
+        popup: "rounded-lg shadow-md",
       },
     });
 
-    // Send delete request to the server using axios with email query parameter
-    console.log(`Deleting post with ID: ${postId}`);
+    // If user didn't confirm, exit the function
+    if (!result.isConfirmed) return;
 
-    // Add the email query parameter to the delete request
     try {
-      const response = await axios.delete(
-        `https://vibe-hive-omega.vercel.app/posts/${postId}?email=${currentUserEmail}`
-      );
-      console.log("Delete response:", response.data);
-    } catch (firstError) {
-      console.error("First delete attempt failed:", firstError);
+      // Show loading indicator
+      Swal.fire({
+        title: "Deleting...",
+        text: "Please wait while we delete your post",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
 
-      // If first attempt fails, try an alternative endpoint structure
-      console.log("Trying alternative endpoint...");
-      const altResponse = await axios.delete(
-        `https://vibe-hive-omega.vercel.app/post/${postId}?email=${currentUserEmail}`
-      );
-      console.log("Alternative delete response:", altResponse.data);
+      // Send delete request to the server using axios with email query parameter
+      console.log(`Deleting post with ID: ${postId}`);
+
+      // Add the email query parameter to the delete request
+      try {
+        const response = await axios.delete(
+          `https://vibe-hive-omega.vercel.app/posts/${postId}?email=${currentUserEmail}`
+        );
+        console.log("Delete response:", response.data);
+      } catch (firstError) {
+        console.error("First delete attempt failed:", firstError);
+
+        // If first attempt fails, try an alternative endpoint structure
+        console.log("Trying alternative endpoint...");
+        const altResponse = await axios.delete(
+          `https://vibe-hive-omega.vercel.app/post/${postId}?email=${currentUserEmail}`
+        );
+        console.log("Alternative delete response:", altResponse.data);
+      }
+
+      // Remove the deleted post from the state
+      setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId));
+
+      // Show success message with SweetAlert2
+      Swal.fire({
+        title: "Deleted!",
+        text: "Your post has been deleted.",
+        icon: "success",
+        customClass: {
+          title: "text-gray-800 font-bold",
+          htmlContainer: "text-gray-600",
+          popup: "rounded-lg shadow-md",
+        },
+      });
+    } catch (error) {
+      // Error handling code remains the same
+      console.error("Error deleting post:", error);
+
+      // Get detailed error message
+      let errorMessage;
+
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        console.error("Error response headers:", error.response.headers);
+
+        errorMessage = `Error ${error.response.status}: ${
+          error.response.data?.message ||
+          error.response.statusText ||
+          "Unknown error"
+        }`;
+      } else if (error.request) {
+        console.error("Error request:", error.request);
+        errorMessage =
+          "No response received from server. Please check your connection.";
+      } else {
+        console.error("Error message:", error.message);
+        errorMessage = error.message || "Unknown error occurred";
+      }
+
+      console.error("Detailed error:", errorMessage);
+      setError(`Failed to delete post: ${errorMessage}`);
+
+      // Show error message with SweetAlert2
+      Swal.fire({
+        title: "Error!",
+        text: `Failed to delete post: ${errorMessage}`,
+        icon: "error",
+        customClass: {
+          title: "text-gray-800 font-bold",
+          htmlContainer: "text-gray-600",
+          popup: "rounded-lg shadow-md",
+        },
+      });
     }
-
-    // Remove the deleted post from the state
-    setPosts((prevPosts) => prevPosts.filter((post) => post._id !== postId));
-
-    // Show success message with SweetAlert2
-    Swal.fire({
-      title: "Deleted!",
-      text: "Your post has been deleted.",
-      icon: "success",
-      customClass: {
-        title: "text-gray-800 font-bold",
-        htmlContainer: "text-gray-600",
-        popup: "rounded-lg shadow-md",
-      },
-    });
-  } catch (error) {
-    // Error handling code remains the same
-    console.error("Error deleting post:", error);
-    
-    // Get detailed error message
-    let errorMessage;
-
-    if (error.response) {
-      console.error("Error response data:", error.response.data);
-      console.error("Error response status:", error.response.status);
-      console.error("Error response headers:", error.response.headers);
-
-      errorMessage = `Error ${error.response.status}: ${
-        error.response.data?.message ||
-        error.response.statusText ||
-        "Unknown error"
-      }`;
-    } else if (error.request) {
-      console.error("Error request:", error.request);
-      errorMessage =
-        "No response received from server. Please check your connection.";
-    } else {
-      console.error("Error message:", error.message);
-      errorMessage = error.message || "Unknown error occurred";
-    }
-
-    console.error("Detailed error:", errorMessage);
-    setError(`Failed to delete post: ${errorMessage}`);
-
-    // Show error message with SweetAlert2
-    Swal.fire({
-      title: "Error!",
-      text: `Failed to delete post: ${errorMessage}`,
-      icon: "error",
-      customClass: {
-        title: "text-gray-800 font-bold",
-        htmlContainer: "text-gray-600",
-        popup: "rounded-lg shadow-md",
-      },
-    });
-  }
-};
+  };
 
   // Handle post editing
   const handleEditPost = (postId) => {
@@ -229,20 +229,20 @@ const MyPosts = () => {
   // Pagination functions
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleNextPage = () => {
     if (currentPage < Math.ceil(posts.length / postsPerPage)) {
       setCurrentPage(currentPage + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -527,9 +527,99 @@ const MyPosts = () => {
                   />
                 </svg>
               </button>
-              <span className="text-gray-600 text-sm">
-                Page {currentPage} of {totalPages}
-              </span>
+
+              {/* Page numbers - limited to prevent too many buttons */}
+              <div className="flex items-center gap-1 mx-2">
+                {totalPages <= 5 ? (
+                  // If 5 or fewer pages, show all page numbers
+                  [...Array(totalPages).keys()].map((number) => (
+                    <button
+                      key={number + 1}
+                      onClick={() => paginate(number + 1)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                        ${
+                          currentPage === number + 1
+                            ? "bg-indigo-600 text-white"
+                            : "bg-white text-gray-700 hover:bg-indigo-50 border border-gray-200"
+                        }`}
+                    >
+                      {number + 1}
+                    </button>
+                  ))
+                ) : (
+                  // If more than 5 pages, show a limited set with ellipsis
+                  <>
+                    {/* First page */}
+                    <button
+                      onClick={() => paginate(1)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                        ${
+                          currentPage === 1
+                            ? "bg-indigo-600 text-white"
+                            : "bg-white text-gray-700 hover:bg-indigo-50 border border-gray-200"
+                        }`}
+                    >
+                      1
+                    </button>
+
+                    {/* Ellipsis or second page */}
+                    {currentPage > 3 && (
+                      <span className="w-8 h-8 flex items-center justify-center text-gray-500">
+                        ...
+                      </span>
+                    )}
+
+                    {/* Pages around current page */}
+                    {[...Array(totalPages).keys()]
+                      .filter((number) => {
+                        const pageNum = number + 1;
+                        return (
+                          pageNum !== 1 &&
+                          pageNum !== totalPages &&
+                          (Math.abs(pageNum - currentPage) < 2 ||
+                            (currentPage <= 3 && pageNum <= 4) ||
+                            (currentPage >= totalPages - 2 &&
+                              pageNum >= totalPages - 3))
+                        );
+                      })
+                      .map((number) => (
+                        <button
+                          key={number + 1}
+                          onClick={() => paginate(number + 1)}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                            ${
+                              currentPage === number + 1
+                                ? "bg-indigo-600 text-white"
+                                : "bg-white text-gray-700 hover:bg-indigo-50 border border-gray-200"
+                            }`}
+                        >
+                          {number + 1}
+                        </button>
+                      ))}
+
+                    {/* Ellipsis or second-to-last page */}
+                    {currentPage < totalPages - 2 && (
+                      <span className="w-8 h-8 flex items-center justify-center text-gray-500">
+                        ...
+                      </span>
+                    )}
+
+                    {/* Last page */}
+                    <button
+                      onClick={() => paginate(totalPages)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors
+                        ${
+                          currentPage === totalPages
+                            ? "bg-indigo-600 text-white"
+                            : "bg-white text-gray-700 hover:bg-indigo-50 border border-gray-200"
+                        }`}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+
               <button
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
