@@ -1,12 +1,16 @@
-import './App.css'
+import "./App.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { RouterProvider } from "react-router-dom";
+import router from "./route/Route";
 
 function App() {
-
   return (
     <>
-      <h1>Vite + React</h1>
+      <RouterProvider router={router} />
+      <ToastContainer position="top-right" autoClose={3000} />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

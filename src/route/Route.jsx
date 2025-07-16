@@ -21,6 +21,7 @@ import AdminProfile from "../pages/AdminProfile";
 import ManageUser from "../pages/ManageUser";
 import Announcement from "../pages/Announcement";
 import Comments from "../pages/Comments";
+import Report from "../pages/Report";
 
 const router = createBrowserRouter([
   {
@@ -108,16 +109,7 @@ const router = createBrowserRouter([
           },
           {
             path: "reported-activities",
-            element: (
-              <div className="min-h-screen p-8">
-                <h1 className="text-3xl font-bold mb-6">
-                  Reported Comments/Activities
-                </h1>
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                  <p>This page will show reported content for moderation.</p>
-                </div>
-              </div>
-            ),
+            element: <Report></Report>
           },
           {
             path: "make-announcement",

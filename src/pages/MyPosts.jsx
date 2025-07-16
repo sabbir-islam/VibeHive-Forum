@@ -9,6 +9,10 @@ const MyPosts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [commentCounts, setCommentCounts] = useState({});
+  // Add pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [postsPerPage, setPostsPerPage] = useState(10);
+  
   const { currentUser } = use(AuthContext);
   const navigate = useNavigate();
 
@@ -222,6 +226,37 @@ const MyPosts = () => {
     navigate(`/comments/${postId}`);
   };
 
+  // Pagination functions
+  const paginate = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < Math.ceil(posts.length / postsPerPage)) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePostsPerPageChange = (e) => {
+    setPostsPerPage(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing posts per page
+  };
+
+  // Get current posts for pagination
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = posts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(posts.length / postsPerPage);
+
   return (
     <div className="max-w-6xl mx-auto my-8 px-4">
       {/* Header */}
@@ -290,7 +325,7 @@ const MyPosts = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post, index) => (
+            {currentPosts.map((post, index) => (
               <div
                 key={post._id || index}
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
@@ -449,6 +484,73 @@ const MyPosts = () => {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="mt-8 flex flex-col md:flex-row md:justify-between items-center">
+            {/* Posts per page selector */}
+            <div className="mb-4 md:mb-0">
+              <span className="text-gray-600 text-sm mr-2">
+                Posts per page:
+              </span>
+              <select
+                value={postsPerPage}
+                onChange={handlePostsPerPageChange}
+                className="bg-white border border-gray-300 rounded-lg shadow-sm px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={20}>20</option>
+              </select>
+            </div>
+
+            {/* Pagination buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Previous page"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 18l-6-6 6-6"
+                  />
+                </svg>
+              </button>
+              <span className="text-gray-600 text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Next page"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 6l6 6-6 6"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       )}
