@@ -165,10 +165,4 @@ For questions, suggestions, or issues, please:
 ---
 
 Made with ❤️ by [sabbir-islam](https://github.com/sabbir-islam)
-## Features
-
-- Light/dark mode toggle
-- Live previews
-- Fullscreen mode
-- Cross platform
 
